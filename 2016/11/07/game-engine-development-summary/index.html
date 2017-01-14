@@ -1,0 +1,888 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="JavaScript,游戏开发," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言写这个小型游戏引擎的目的，是为了深入学习 JavaScript ，现在功能已经有了一定的雏形，所以作一个阶段性的总结。
+架构系统采用分层架构，主要分为 底层工具层 、 基础类层 、 功能层。
+底层工具层
+碰撞检测模块 第一次重构，这时的碰撞检测模块是使用Object.assign()追加到Shape.prototype里面，然后分开为两个文件。包括求多边形的所有边的向量等函数，均是使用该种方法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微型游戏引擎开发阶段总结">
+<meta property="og:url" content="https://keifergu.github.io/2016/11/07/game-engine-development-summary/index.html">
+<meta property="og:site_name" content="KeiferGu的博客">
+<meta property="og:description" content="前言写这个小型游戏引擎的目的，是为了深入学习 JavaScript ，现在功能已经有了一定的雏形，所以作一个阶段性的总结。
+架构系统采用分层架构，主要分为 底层工具层 、 基础类层 、 功能层。
+底层工具层
+碰撞检测模块 第一次重构，这时的碰撞检测模块是使用Object.assign()追加到Shape.prototype里面，然后分开为两个文件。包括求多边形的所有边的向量等函数，均是使用该种方法">
+<meta property="og:updated_time" content="2017-01-14T17:35:29.291Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="微型游戏引擎开发阶段总结">
+<meta name="twitter:description" content="前言写这个小型游戏引擎的目的，是为了深入学习 JavaScript ，现在功能已经有了一定的雏形，所以作一个阶段性的总结。
+架构系统采用分层架构，主要分为 底层工具层 、 基础类层 、 功能层。
+底层工具层
+碰撞检测模块 第一次重构，这时的碰撞检测模块是使用Object.assign()追加到Shape.prototype里面，然后分开为两个文件。包括求多边形的所有边的向量等函数，均是使用该种方法">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://keifergu.github.io/2016/11/07/game-engine-development-summary/"/>
+
+
+
+
+
+  <title> 微型游戏引擎开发阶段总结 | KeiferGu的博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?bb4e64c0604ee73663e2c947b1173ddf";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">KeiferGu的博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle">探索、学习、思考</p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://keifergu.github.io/2016/11/07/game-engine-development-summary/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Keifer Gu">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/uploads/avatar.png">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="KeiferGu的博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="KeiferGu的博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                微型游戏引擎开发阶段总结
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Дата создания записи" itemprop="dateCreated datePublished" datetime="2016-11-07T14:05:54+08:00">
+                2016-11-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/11/07/game-engine-development-summary/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/07/game-engine-development-summary/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/11/07/game-engine-development-summary/" class="leancloud_visitors" data-flag-title="微型游戏引擎开发阶段总结">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写这个<a href="http://github.com/keifergu/flappy-bird" target="_blank" rel="external">小型游戏引擎</a>的目的，是为了深入学习 JavaScript ，现在功能已经有了一定的雏形，所以作一个阶段性的总结。</p>
+<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p>系统采用分层架构，主要分为 底层工具层 、 基础类层 、 功能层。</p>
+<h3 id="底层工具层"><a href="#底层工具层" class="headerlink" title="底层工具层"></a>底层工具层</h3><ol>
+<li><p>碰撞检测模块<br> 第一次重构，这时的<code>碰撞检测模块</code>是使用<code>Object.assign()</code>追加到<code>Shape.prototype</code>里面，然后分开为两个文件。包括求多边形的所有边的向量等函数，均是使用该种方法追加到各自的图形类中。这样，虽然在文件上是分开的，但是在逻辑上，两个模块是杂揉在一起的。</p>
+<p> 第二次重构时，我的想法是使用#函数式编程#，将各个具体功能（例如求多边形的所有边的法向量）写成单独的函数，而实例对象作为参数传进去，返回计算结果，然后在主函数里面顺序调用。这样的写法能够满足对外只有#单一接口#。但是在后面我对<code>图形类</code>进行重构时，这里遇到的很大的问题。</p>
+<p> 第三次重构，因为对<code>图形类</code>进行重构时，将数据接口进行了更改，导致了<code>碰撞检测模块</code>中的大量方法需要更改，这时我的想法是将<code>碰撞检测模块</code>重构为一个可复用的模块，对外提供单一接口并确定参数格式内容。这时，我将除<code>Vector模块</code>之外的依赖删除，在函数内部创建<code>图形类</code>，当接收到外部参数时，实例化图形类，然后进行计算。同时，为了便于以后对接口进行重构，添加一个<code>数据转换</code>函数，将外部的参数格式转换为内部使用的格式，同时也起着数据格式校验的功能，在后面的处理大量<code>switch/case</code>时，也起着重要的作用。</p>
+<p> 第四次重构，此时数据格式，外部接口已经固定，但是有一个问题，<code>碰撞检测</code>需要对不同的图形进行不同的检测算法，那么需要使用<code>switch/case</code>或者<code>if/else</code>对图形的类型进行判断。但是当图形类别较多时，这里的代码会非常繁杂，及其不便于修改和扩展。这时，我想到了使用#查找表#来彻底解决这个问题。具体的做法是根据传入的图形类名构造函数名，然后动态的调用函数。可以看这个代码样例：</p>
+ <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> collisionObject = &#123;</div><div class="line">    <span class="attr">polygon_circle</span>: <span class="function"><span class="keyword">function</span>(<span class="params">polygon, circle</span>)</span>&#123;</div><div class="line">        <span class="comment">// 碰撞检测的主程序代码</span></div><div class="line">    &#125;,</div><div class="line">&#125;</div><div class="line"></div><div class="line">collison(s1, s2)&#123;</div><div class="line"> <span class="comment">/**</span></div><div class="line"> s1&#123;</div><div class="line">    type: "polygon",</div><div class="line">    data: [Object Array]</div><div class="line"> &#125;</div><div class="line"> s2&#123;</div><div class="line">    type: "circle",</div><div class="line">    data: [Object Array]</div><div class="line"> &#125;</div><div class="line"> **/</div><div class="line"> <span class="comment">// 动态的构造参数，来确定调用的函数</span></div><div class="line"> <span class="keyword">return</span> collisionObject[s1.type + <span class="string">'_'</span> + s2.type](s1, s2);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>图形绘制模块<br> 初始版本，此时的<code>图形绘制函数</code>是直接写在<code>图形类</code>里面的，直接调用<code>canvas</code>的接口进行绘制</p>
+<p> 第一次重构， 直接将<code>图形绘制函数</code>拆分为单一模块，对外提供统一接口。这样不管外部<code>图形类</code>如何改变，只需要将其转换为标准接口即可继续正常使用<code>图形绘制模块</code>。第二个好处是，将<em>数据</em>和<em>表现</em>分开，便于移植，也就是说如果我不在<code>canvas</code>上绘图，那么我可以直接修改<code>图形绘制函数</code>，使用目标平台的<code>绘制API</code>来实现以前的功能，而且对上层的代码没有任何影响。</p>
+</li>
+</ol>
+<h3 id="基础类层"><a href="#基础类层" class="headerlink" title="基础类层"></a>基础类层</h3><ol>
+<li><p>图形类<br> <code>图形类</code>也经历过多次的重构，但大多数是更改数据接口。现在基本的图形基类抽象为四种，均继承与基类<code>Shape</code>：</p>
+<ul>
+<li>点（Point）</li>
+<li>线段（Line）</li>
+<li>多边形（Polygon）</li>
+<li><p>圆（Circle）</p>
+</li>
+<li><p>矩形（Rect），继承于<code>Polygon</code></p>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><h3 id="架构以及接口"><a href="#架构以及接口" class="headerlink" title="架构以及接口"></a>架构以及接口</h3><p>编写这个项目的过程中，有一大部分的时间都是在设计程序架构，设计接口。不断的推翻以前的设计，不断的重构。这个时候，真正的体会到，程序设计是一件需要创造力和想象力的事情，并不是简单的堆叠代码。</p>
+<p>整个项目的开发流程大概类似“原型模式”，首先使用 JavaScript 完成了一个能够运行的原型，然后拆分功能，将图形、算法、视图分开，然后尝试扩展，抽象出高级的类。再然后尝试将某些功能独立出来，使其成为一个可复用的模块。虽然最后的展现形式没有改变，但是对于日后的维护和扩展，却有着不同的难度。</p>
+<p>接口的设计，我认为这是最难的一部分。</p>
+<h3 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a>设计模式</h3><p>我认为，设计模式的使用就是为了<strong>便于对功能进行增删改</strong>。那么，当你在进行开发时，一直在想着如果这个需求后面改了怎么办，如果函数参数要改怎么办，如果接口要改怎么办。当你在这么想时，并且尽可能让你的代码能够从容应对这些改动需求时，你就在应用设计模式了。</p>
+<h4 id="接口模式的使用"><a href="#接口模式的使用" class="headerlink" title="接口模式的使用"></a>接口模式的使用</h4>
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag"># JavaScript</a>
+          
+            <a href="/tags/游戏开发/" rel="tag"># 游戏开发</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/10/20/javascript-get-class-name/" rel="next" title="在Javascript中获取class的类型名的方法">
+                <i class="fa fa-chevron-left"></i> 在Javascript中获取class的类型名的方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/11/07/github-page-vendors-404/" rel="prev" title="关于 Github Page 的 Vendors 文件夹无法访问的问题">
+                关于 Github Page 的 Vendors 文件夹无法访问的问题 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/11/07/game-engine-development-summary/"
+           data-title="微型游戏引擎开发阶段总结" data-url="https://keifergu.github.io/2016/11/07/game-engine-development-summary/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Keifer Gu" />
+          <p class="site-author-name" itemprop="name">Keifer Gu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/keifergu" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#架构"><span class="nav-number">2.</span> <span class="nav-text">架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#底层工具层"><span class="nav-number">2.1.</span> <span class="nav-text">底层工具层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基础类层"><span class="nav-number">2.2.</span> <span class="nav-text">基础类层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后记"><span class="nav-number">3.</span> <span class="nav-text">后记</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#架构以及接口"><span class="nav-number">3.1.</span> <span class="nav-text">架构以及接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设计模式"><span class="nav-number">3.2.</span> <span class="nav-text">设计模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#接口模式的使用"><span class="nav-number">3.2.1.</span> <span class="nav-text">接口模式的使用</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keifer Gu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"keifergu"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("KeBkvyuWxHMNQ1l3opfU0DXu-gzGzoHsz", "RgoTBtQ9eB96JNw2c38l6MEW");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+
+</body>
+</html>
